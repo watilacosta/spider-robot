@@ -1,57 +1,58 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+#define PCA9685_ADDRESS 0x40
+
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(PCA9685_ADDRESS);
 
 #define MIN_PULSE_WIDTH 150
 #define MAX_PULSE_WIDTH 600
-#define DEFAULT_PULSE_WIDTH 150
 #define FREQUENCY 60
 
-const int tibiaFrontalE = 5;
-const int tibiaFrontalD = 2;
-const int tibiaTraseiraE = 6;
-const int tibiaTraseiraD = 7;
+const int frontTibiaL = 5;
+const int frontTibiaR = 2;
+const int backTibiaL = 6;
+const int backTibiaR = 7;
 
-const int femurFrontalE = 0;
-const int femurFrontalD = 3;
-const int femurTraseiroE = 1;
-const int femurTraseiroD = 4;
+const int frontFemurL = 0;
+const int frontFemurR = 3;
+const int backFemurL = 1;
+const int backFemurR = 4;
 
-const int tibiasCount = 4;
-const int femursCount = 4;
+void moveServo(uint8_t servo, int angle) {
+  if(angle < 0) {
+    angle = 0;
+  } else if (angle > 180) {
+    angle = 180;
+  }
 
-int pulseWidth(int angle) {
-  int pulse_wide, analog_value;
+  uint16_t pulse_width = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
 
-  pulse_wide   = map(angle, 0, 180, MIN_PULSE_WIDTH, MAX_PULSE_WIDTH);
-  analog_value = int(float (pulse_wide) / 1000000 * FREQUENCY * 4096);
+  pwm.setPWM(servo, 0, pulse_width);
+}
 
-  return analog_value;
+void standUp() {
+  moveServo(frontTibiaL, 0);
+  moveServo(frontTibiaR, 0);
+  moveServo(backTibiaL, 0);
+  moveServo(backTibiaR, 0);
+}
+
+void sitDown() {
+  moveServo(frontTibiaL, 90);
+  moveServo(frontTibiaR, 90);
+  moveServo(backTibiaL, 90);
+  moveServo(backTibiaR, 90);
 }
 
 void setup() {
-  Serial.begin(9600);
+  Wire.begin();
 
   pwm.begin();
+  pwm.setOscillatorFrequency(27000000);
   pwm.setPWMFreq(FREQUENCY);
-  delay(1000);
-
-  pwm.setPWM(tibiaFrontalE, 0, pulseWidth(90));
-  pwm.setPWM(tibiaFrontalD, 0, pulseWidth(90));
-  pwm.setPWM(tibiaTraseiraE, 0, pulseWidth(90));
-  pwm.setPWM(tibiaTraseiraD, 0, pulseWidth(90));
+  standUp();
 }
 
 void loop() {
-  delay(1000);
-  pwm.setPWM(tibiaFrontalE, 0, pulseWidth(180));
-  pwm.setPWM(tibiaFrontalD, 0, pulseWidth(180));
-  pwm.setPWM(tibiaTraseiraE, 0, pulseWidth(180));
-  pwm.setPWM(tibiaTraseiraD, 0, pulseWidth(180));
-  delay(1000);
-  pwm.setPWM(tibiaFrontalE, 0, pulseWidth(90));
-  pwm.setPWM(tibiaFrontalD, 0, pulseWidth(90));
-  pwm.setPWM(tibiaTraseiraE, 0, pulseWidth(90));
-  pwm.setPWM(tibiaTraseiraD, 0, pulseWidth(90));
 }
